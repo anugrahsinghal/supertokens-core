@@ -117,13 +117,19 @@ public class Start implements SessionSQLStorage, EmailPasswordSQLStorage, EmailV
         try {
             ConnectionPool.initPool(this);
             GeneralQueries.createTablesIfNotExists(this, this.main);
-        } catch (SQLException e) {
+        } catch (SQLException | StorageQueryException e) {
             throw new QuitProgramFromPluginException(e);
         }
     }
 
     @Override
     public <T> T startTransaction(TransactionLogic<T> logic)
+            throws StorageTransactionLogicException, StorageQueryException {
+        return startTransaction(logic, TransactionIsolationLevel.SERIALIZABLE);
+    }
+
+    @Override
+    public <T> T startTransaction(TransactionLogic<T> logic, TransactionIsolationLevel isolationLevel)
             throws StorageTransactionLogicException, StorageQueryException {
         int tries = 0;
         while (true) {
